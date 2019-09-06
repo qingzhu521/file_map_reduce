@@ -64,9 +64,10 @@ impl CompareElement {
                 -1
             }
         };
-        if _read_size != -1 {
+
+        if _read_size != -1 && line.len() != 0 {
             let mut iter = line.split_whitespace();
-            self.current_top_num = line.parse().unwrap();
+            self.current_top_num = iter.next().unwrap().parse().unwrap();
             self.current_top_url = iter.next().unwrap().to_string();
         }
 
