@@ -46,8 +46,9 @@ impl<P: AsRef<Path>> ReduceFunction<P> {
             let path_buf = self.output_prefix.as_ref().join(i.to_string().as_str());
             let outpath = path_buf.as_path();
 
-            if std::fs::create_dir(self.output_prefix.as_ref()).is_ok() {
-                println!("Create reduce out file success");
+            match std::fs::create_dir(self.output_prefix.as_ref()) {
+                Ok(()) => println!("Create reduce out file success"),
+                _ => println!("Reduce File Director Already_Have"),
             };
             let mut hmap = HashMap::<String, u64>::new();
 

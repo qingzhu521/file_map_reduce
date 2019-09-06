@@ -48,7 +48,13 @@ fn main() -> std::io::Result<()> {
             interval
         };
         println!("{} {}", start, end);
-        let reduce_func = ReduceFunction::new("tmp", "statistic", start, end, map_thread_num);
+        let reduce_func = ReduceFunction::new(
+            "target\\tmp",
+            "target\\statistic",
+            start,
+            end,
+            map_thread_num,
+        );
         let handler = thread::spawn(move || -> std::io::Result<()> { reduce_func.reduce() });
         reduce_thread_vec.push(handler);
     }
@@ -61,7 +67,7 @@ fn main() -> std::io::Result<()> {
         }
     }
 
-    let result = get_top_k("statistic", 2, 100);
+    let result = get_top_k("target\\statistic", 2, 100);
     println!("{:?}", result);
 
     println!("{:?}", current.elapsed());
