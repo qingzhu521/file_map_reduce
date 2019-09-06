@@ -1,0 +1,8 @@
+[package]
+name = "file_map_reduce"
+version = "0.1.0"
+authors = ["qingzhu <q15000557748@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.3.17"
