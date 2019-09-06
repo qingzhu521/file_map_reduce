@@ -74,13 +74,13 @@ mod test {
         let filepath = String::from("urlfile.txt");
         let file_offs = io_splite(&filepath, 2)?;
         let f = File::open(&filepath)?;
-        for (index, file_off) in file_offs.iter().enumerate() {
+        for (_index, file_off) in file_offs.iter().enumerate() {
             let mut buf = BufReader::new(f.try_clone()?);
             let sz = file_off.get_end() - file_off.get_start();
             let _res = buf.seek(SeekFrom::Start(file_off.get_start() as u64));
             let mut buffer = vec![0; sz as usize];
             buf.read_exact(&mut buffer)?;
-            if index == 0 {
+            if _index == 0 {
                 assert_eq!(b"urlone\r\nurltwo\r\nurlthree\r\n", buffer.as_slice())
             } else {
                 assert_eq!(b"urlone\r\n", buffer.as_slice())
@@ -95,15 +95,15 @@ mod test {
         let filepath = String::from("urlfile.txt");
         let file_offs = io_splite(&filepath, 2)?;
         let f = File::open(&filepath)?;
-        for (index, file_off) in file_offs.iter().enumerate() {
+        for file_off in file_offs.iter() {
             let buf = BufReader::new(f.try_clone()?);
             let mut sz = file_off.get_end() - file_off.get_start();
-            for (index, line) in buf.lines().enumerate() {
+            for (_index, line) in buf.lines().enumerate() {
                 let sten: String = line.unwrap();
                 sz -= sten.len() as u64;
-                if index == 0 {
+                if _index == 0 {
                     assert_eq!(sten, "urlone");
-                } else if index == 1 {
+                } else if _index == 1 {
                     assert_eq!(sten, "urltwo");
                 }
                 if sz == 0 {
