@@ -68,7 +68,7 @@ impl<P: AsRef<Path>> ReduceFunction<P> {
 
                 for line in bucket_reader.lines() {
                     let url = line.unwrap();
-                    *hmap.entry(url).or_default() += 1;;
+                    *hmap.entry(url).or_default() += 1;
                 }
             }
 
