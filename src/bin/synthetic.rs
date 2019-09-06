@@ -1,14 +1,15 @@
 extern crate rand;
 
 use crate::rand::Rng;
+use file_map_reduce::util::BUF_SIZE;
 use std::fs::File;
 use std::io::BufWriter;
 use std::io::Write;
 use std::thread;
 
 fn main() -> std::io::Result<()> {
-    let base_num = 10000000u64;
-    let maximum = 5 * base_num;    
+    let base_num = 10_000_000u64;
+    let maximum = 5 * base_num;
     let mut tvec = vec![];
     for i in 0..2 {
         let handler = thread::Builder::new()
@@ -25,7 +26,7 @@ fn main() -> std::io::Result<()> {
                     _ => File::create(&file_path)?,
                 };
 
-                let mut bw = BufWriter::with_capacity(1 << 20, out_file);
+                let mut bw = BufWriter::with_capacity(BUF_SIZE, out_file);
                 for i in 0..maximum / 2 {
                     let mut url_example = String::from("url:://");
                     let rand_part: String = rng.gen::<u64>().to_string();
@@ -33,7 +34,11 @@ fn main() -> std::io::Result<()> {
                     url_example.push('\n');
                     let _res = bw.write(url_example.as_bytes());
                     if i % base_num == 0 {
-                        println!("STAGE ------{:?} / {:?}-----", i / base_num, maximum / base_num);
+                        println!(
+                            "STAGE ------{:?} / {:?}-----",
+                            i / base_num,
+                            maximum / base_num
+                        );
                     }
                 }
 

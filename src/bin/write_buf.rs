@@ -24,7 +24,7 @@ fn main() -> std::io::Result<()> {
     let file_path = String::from("target\\test.data");
     let out_file = File::create(&file_path)?;
 
-    let base_num = 100000000u64;
+    let base_num = 10_000_000u64;
     let maximum = 5 * base_num;
     let instants = Instant::now();
     let mut bw = BufWriter::with_capacity(buf_size, out_file);

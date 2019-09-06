@@ -1,3 +1,4 @@
+use super::util::BUF_SIZE;
 use crate::util::FileOffset;
 use std::collections::hash_map::DefaultHasher;
 use std::fs::File;
@@ -6,7 +7,7 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 ///
 /// The File Map Function
@@ -24,22 +25,22 @@ use std::path::Path;
 pub struct MapFunction<P: AsRef<Path>> {
     file_offset: FileOffset,
     input_file_name: P,
-    output_dir: P,
-    output_num: usize,
+    output_dir: String,
+    bucket_num: usize,
 }
 
 impl<P: AsRef<Path>> MapFunction<P> {
     pub fn new(
         file_offset: FileOffset,
         input_file_name: P,
-        output_dir: P,
-        output_num: usize,
+        output_dir: String,
+        bucket_num: usize,
     ) -> Self {
         Self {
             file_offset,
             input_file_name,
             output_dir,
-            output_num,
+            bucket_num,
         }
     }
 
@@ -48,19 +49,21 @@ impl<P: AsRef<Path>> MapFunction<P> {
             Ok(file) => file,
             _ => panic!("Error Open Map File"),
         };
-        let bffreader = BufReader::with_capacity(1 << 20, f);
+        let bffreader = BufReader::with_capacity(BUF_SIZE, f);
 
         let mut bffwriter_vec = vec![];
-        for i in 0..self.output_num {
-            let out_file = i.to_string();
-            let path_buf = self.output_dir.as_ref().join(&out_file);
+        match std::fs::create_dir(self.output_dir.as_str()) {
+            Ok(()) => println!("Create OK"),
+            _ => println!("Map output director Already have"),
+        };
+
+        for i in 0..self.bucket_num {
+            let mut path_buf = PathBuf::from(self.output_dir.as_str());
+            path_buf.push(&i.to_string());
             let output_file = path_buf.as_path();
-            match std::fs::create_dir(self.output_dir.as_ref()) {
-                Ok(()) => println!("Create OK"),
-                _ => println!("Already have"),
-            };
+
             let f = File::create(output_file)?;
-            bffwriter_vec.push(BufWriter::with_capacity(1 << 20, f));
+            bffwriter_vec.push(BufWriter::with_capacity(BUF_SIZE, f));
         }
         let mut sz = self.file_offset.get_end() - self.file_offset.get_start();
         let mut hasher = DefaultHasher::new();
@@ -69,7 +72,7 @@ impl<P: AsRef<Path>> MapFunction<P> {
             sz -= url.len() as u64;
             url.hash(&mut hasher);
             let hash_res = hasher.finish();
-            let output_index = hash_res % (self.output_num as u64);
+            let output_index = hash_res % (self.bucket_num as u64);
             url.push('\n');
             let _res = bffwriter_vec[output_index as usize].write(url.as_bytes());
             if sz == 0 {
@@ -93,7 +96,7 @@ mod test {
 
         let fo = FileOffset::new(0, len);
 
-        let mapper = MapFunction::new(fo, "urlfile.txt", "tmp0", 2);
+        let mapper = MapFunction::new(fo, "urlfile.txt", String::from("tmp0"), 2);
         mapper.map()?;
 
         Ok(())

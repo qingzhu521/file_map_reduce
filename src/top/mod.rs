@@ -1,3 +1,4 @@
+use super::util::BUF_SIZE;
 use std::cmp::{Ord, Ordering, PartialOrd};
 use std::collections::BinaryHeap;
 use std::fs::File;
@@ -39,7 +40,7 @@ impl CompareElement {
             Ok(file) => file,
             _ => panic!("Fail at reading statistic File"),
         };
-        let mut bufreader = BufReader::with_capacity(1 << 20, f);
+        let mut bufreader = BufReader::with_capacity(BUF_SIZE, f);
         let mut line = String::new();
         let _res = bufreader.read_line(&mut line);
         let mut iter = line.split_whitespace();
@@ -56,12 +57,18 @@ impl CompareElement {
         let ans = (self.current_top_num, self.current_top_url.clone());
         let mut line = String::new();
         let _read_size = match self.bufreader.read_line(&mut line) {
-            Ok(size) => size,
-            _ => 0,
+            Ok(size) => size as i64,
+            _ => {
+                self.current_top_num = 0;
+                self.current_top_url = String::from("");
+                -1
+            }
         };
-        let mut iter = line.split_whitespace();
-        self.current_top_num = iter.next().unwrap().parse().unwrap();
-        self.current_top_url = iter.next().unwrap().to_string();
+        if _read_size != -1 {
+            let mut iter = line.split_whitespace();
+            self.current_top_num = line.parse().unwrap();
+            self.current_top_url = iter.next().unwrap().to_string();
+        }
 
         ans
     }

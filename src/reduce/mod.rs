@@ -1,3 +1,4 @@
+use super::util::BUF_SIZE;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufRead;
@@ -5,7 +6,6 @@ use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-
 ///
 /// The File Reduce Function
 ///
@@ -43,45 +43,43 @@ impl<P: AsRef<Path>> ReduceFunction<P> {
 
     pub fn reduce(&self) -> std::io::Result<()> {
         for i in self.bucket_start..self.bucket_end {
+            let path_buf = self.output_prefix.as_ref().join(i.to_string().as_str());
+            let outpath = path_buf.as_path();
+
+            if std::fs::create_dir(self.output_prefix.as_ref()).is_ok() {
+                println!("Create reduce out file success");
+            };
             let mut hmap = HashMap::<String, u64>::new();
 
             for j in 0..self.pre_thread_num {
                 let mut strbuf = String::new();
                 strbuf.push_str(self.input_prefix.as_ref().to_str().unwrap());
                 strbuf.push_str(j.to_string().as_str());
-                println!("{:?}", strbuf);
                 let prefixbuf = PathBuf::from(strbuf);
 
-                let prefix = prefixbuf.as_path().join(i.to_string().as_str());
-                let f = match File::open(prefix) {
+                let inputfile = prefixbuf.as_path().join(i.to_string().as_str());
+                let f = match File::open(inputfile) {
                     Ok(file) => file,
                     _ => panic!("Error Open Reduce File"),
                 };
 
-                let bucket_reader = BufReader::with_capacity(1 << 20, f);
+                let bucket_reader = BufReader::with_capacity(BUF_SIZE, f);
 
                 for line in bucket_reader.lines() {
                     let url = line.unwrap();
                     *hmap.entry(url).or_default() += 1;;
                 }
             }
+
             let mut url_vec = vec![];
             for (url, num) in hmap.drain() {
                 url_vec.push((num, url));
             }
             url_vec.sort_unstable_by(|a, b| a.0.cmp(&b.0).reverse());
 
-            let path_buf = self.output_prefix.as_ref().join(i.to_string().as_str());
-            let outpath = path_buf.as_path();
-            println!("{:?}", outpath);
-
-            match std::fs::create_dir(self.output_prefix.as_ref()) {
-                Ok(()) => println!("Create OK"),
-                _ => println!("Already have"),
-            };
             let out_file = File::create(outpath)?;
 
-            let mut bffwriter = BufWriter::with_capacity(1 << 20, out_file);
+            let mut bffwriter = BufWriter::with_capacity(BUF_SIZE, out_file);
             for (num, url) in url_vec.drain(..) {
                 bffwriter.write_fmt(format_args!("{} {:?}\n", num, url))?;
             }

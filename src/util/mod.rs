@@ -4,6 +4,7 @@ use std::io::BufReader;
 use std::io::SeekFrom;
 use std::path::Path;
 
+pub const BUF_SIZE: usize = 1 << 16;
 ///
 /// the Splite Postion of the total file
 ///
@@ -39,7 +40,7 @@ pub fn io_splite<P: AsRef<Path>>(path: P, n: usize) -> std::io::Result<Vec<FileO
 
     let mut offset = vec![];
     offset.push(0);
-    let mut bffreader = BufReader::with_capacity(4 << 20, f);
+    let mut bffreader = BufReader::with_capacity(BUF_SIZE, f);
     let mut real_next;
 
     for _i in 1..n {
