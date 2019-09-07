@@ -38,19 +38,19 @@ fn main() -> std::io::Result<()> {
                 .help("The director of reduce output")
                 .takes_value(true)
                 .index(3),
-            Arg::with_name("number_of_map_thread")
+            Arg::with_name("number_of_map_threads")
                 .short("f")
                 .long("threadm")
                 .default_value("1")
                 .help("The number of threads that map occupe")
                 .takes_value(true),
-            Arg::with_name("number_of_reduce_thread")
+            Arg::with_name("number_of_reduce_threads")
                 .short("s")
                 .long("threadr")
                 .default_value("1")
                 .help("The number of threads that reduce occupe")
                 .takes_value(true),
-            Arg::with_name("number_of_bucket")
+            Arg::with_name("number_of_buckets")
                 .short("b")
                 .long("bucket")
                 .default_value("117")
@@ -64,17 +64,17 @@ fn main() -> std::io::Result<()> {
     let reduce_out_dir = matches.value_of("reduce_output").unwrap().to_string();
 
     let map_thread_num: usize = matches
-        .value_of("number_of_map_thread")
+        .value_of("number_of_map_threads")
         .unwrap()
         .parse()
         .unwrap();
     let reduce_thread_num = matches
-        .value_of("number_of_reduce_thread")
+        .value_of("number_of_reduce_threads")
         .unwrap()
         .parse()
         .unwrap();
     let bucket_number = matches
-        .value_of("number_of_bucket")
+        .value_of("number_of_buckets")
         .unwrap()
         .parse()
         .unwrap();
