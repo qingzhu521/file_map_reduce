@@ -9,15 +9,16 @@ Usage:
 
 
 The whole process can be divided into three part. 
-* Map:    It read the url file and hash the URL string into a number send it to number % bucket file
-* Reduce: It read the bucket file as map giving and store it into a map. Then sort each file into a bucket sorted file as output
-* Topk:   It use output file of reduce procdure as a input. And use heap iteratively give the top-k elements 
+* Map:    It reads the url file and hash the URL string into a number which is like number % bucket to specify the index of file that the url belongs.
+* Reduce: It reads the bucket file as map giving and store it into a map. Then it sorts each file into a bucket sorted file as output.
+* Topk:   It uses output file of reduce procdure as a input. And use heap iteratively give the top-k elements.
 
 
-
-This is a table for experiment.
-In experiments we test the best buffer size of reader and writer.
-And we use brown hash and seahash as comparison with the standard library. 
-And we superisingly discovered that usually standard library is more faster than the third part library 
-in most of the time.
-https://docs.google.com/spreadsheets/d/1usG3xcs5iF3F0ls63ppfFUILXCpnaqX4CJNTfUTXXnI/edit#gid=0
+This is a table for experiments[https://docs.google.com/spreadsheets/d/1usG3xcs5iF3F0ls63ppfFUILXCpnaqX4CJNTfUTXXnI/edit#gid=0
+].
+In experiments first we test the best buffer size of reader and writer.
+And then we use brown hash and seahash as comparison with the standard library. 
+We superisingly discovered these conclusion.
+First usually standard library is more faster than the third part library in most of the time. 
+And through our experiments we found multi thread do harm to IO-efficient programming.
+We need to do more experiment on computer with multi disks  to prove it will do better in that environment.
