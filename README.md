@@ -7,7 +7,7 @@
  ##### Parameters
     -i   input - the path of input url file  
     -m   map_out - a prefix of the file written by the map operator 
-    -r   reduce_out - the director of the file written the reduce operator   
+    -r   reduce_out - the director of the file written by the reduce operator   
     -f   number of the map threads 
     -s   number of the reduce threads  
     -b   number of buckets
@@ -26,4 +26,5 @@ First we tested the best buffer size of reader and writer.
 Then we use [brown hash](https://github.com/rust-lang/hashbrown) and [seahash](https://docs.rs/seahash/2.0.0/seahash/) to compare with the standard library. We superisingly discovered these conclusion:
 - Standard library is more faster than the third part library in most of the time. 
 - Multi-thread do harm to IO-Efficient programming. 
+
 More experiments are needed with multi-disks system to prove it will have a better performance.
