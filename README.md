@@ -1,4 +1,4 @@
-# file_map_reduce
+# File_Based_Map_Reduce
 
 This project is for the test of PingCap.
 
