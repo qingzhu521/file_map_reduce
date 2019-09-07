@@ -1,11 +1,16 @@
 # File_Based_Map_Reduce
 
-This project is for the test of PingCap.
+The project is for finding the most 100 urls in 100GB files which constraint in 1G memory.
 
 Usage:
-  cargo run --bin main -- <input>  -m <map_out> -r <reduce_out> -f <the number of map thread> -s <the number of reduce thread> -b <the number of the bucket>
+  `cargo run --bin main -- <input>  -m <map_out> -r <reduce_out> -f <number of the map threads> -s <number of the reduce threads> -b <number of the buckets>`
   
-  The first parameter means the path of input url file. The second is a prefix of the file that the map operator can store. The thrid is similar and it give the director of the file that the reduce operator can store. The fifth means the number of map thread. The forth is the number of the reduce thread. The last means the number of the bucket.
+ -<input> the path of input url file. 
+ -<map_out> a prefix of the file that the map operator can store. 
+ -<reduce_out> the director of the file that the reduce operator can store. 
+ -<number of the map threads> 
+ -<number of the reduce threads>
+ -<number of buckets>.
 
 
 The whole process can be divided into three part. 
@@ -21,4 +26,4 @@ And then we use brown hash and seahash as comparison with the standard library.
 We superisingly discovered these conclusion.
 First usually standard library is more faster than the third part library in most of the time. 
 And through our experiments we found multi thread do harm to IO-efficient programming.
-We need to do more experiment on computer with multi disks  to prove it will do better in that environment.
+In future we need to do more experiment on computer with multi disks to prove it will do better in that environment.
