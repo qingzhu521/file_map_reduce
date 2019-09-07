@@ -1,5 +1,6 @@
 use super::util::BUF_SIZE;
 use crate::util::FileOffset;
+
 use std::collections::hash_map::DefaultHasher;
 use std::fs::File;
 use std::hash::{Hash, Hasher};
@@ -8,8 +9,7 @@ use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Write;
 use std::io::{Seek, SeekFrom};
-use std::path::{Path, PathBuf};
-
+use std::path::PathBuf;
 ///
 /// The File Map Function
 ///
@@ -23,17 +23,17 @@ use std::path::{Path, PathBuf};
 /// *[`Clone`]
 ///
 #[derive(Clone)]
-pub struct MapFunction<P: AsRef<Path>> {
+pub struct MapFunction {
     file_offset: FileOffset,
-    input_file_name: P,
+    input_file_name: String,
     output_dir: String,
     bucket_num: usize,
 }
 
-impl<P: AsRef<Path>> MapFunction<P> {
+impl MapFunction {
     pub fn new(
         file_offset: FileOffset,
-        input_file_name: P,
+        input_file_name: String,
         output_dir: String,
         bucket_num: usize,
     ) -> Self {
@@ -45,8 +45,8 @@ impl<P: AsRef<Path>> MapFunction<P> {
         }
     }
 
-    pub fn map(&self) -> std::io::Result<()> {
-        let f = match File::open(self.input_file_name.as_ref()) {
+    pub fn map(&mut self) -> std::io::Result<()> {
+        let f = match File::open(self.input_file_name.as_str()) {
             Ok(file) => file,
             _ => panic!("Error Open Map File"),
         };
@@ -67,13 +67,16 @@ impl<P: AsRef<Path>> MapFunction<P> {
             bffwriter_vec.push(BufWriter::with_capacity(BUF_SIZE, f));
         }
         let mut sz = self.file_offset.get_end() - self.file_offset.get_start();
-        let mut hasher = DefaultHasher::new();
         for line in bffreader.lines() {
             let mut url: String = line.unwrap();
+
             let line_sep = if cfg!(target_os = "windows") { 2 } else { 1 };
             sz -= (url.len() + line_sep) as u64; // And the \n
+
+            let mut hasher = DefaultHasher::new();
             url.hash(&mut hasher);
             let hash_res = hasher.finish();
+
             let output_index = hash_res % (self.bucket_num as u64);
             url.push('\n');
             let _res = bffwriter_vec[output_index as usize].write(url.as_bytes());
@@ -93,11 +96,12 @@ mod test {
     use std::iter::Iterator;
     #[test]
     fn test_map() -> std::io::Result<()> {
-        let io_spliter = io_splite("urlfile.txt", 2).unwrap();
+        let io_spliter = io_splite(String::from("urlfile.txt"), 2).unwrap();
+
         for (index, fo) in io_spliter.iter().enumerate() {
             let mut prefix = String::from("tmp");
             prefix.push_str(index.to_string().as_str());
-            let mapper = MapFunction::new(fo.clone(), "urlfile.txt", prefix, 2);
+            let mut mapper = MapFunction::new(fo.clone(), String::from("urlfile.txt"), prefix, 2);
             mapper.map()?;
         }
 

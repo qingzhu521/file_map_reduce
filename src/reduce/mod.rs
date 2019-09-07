@@ -5,29 +5,34 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 ///
 /// The File Reduce Function
 ///
 /// Reduce procedure read url from bucket file that Map just create.
-/// It will use hashmap to give a count to every url and store it
-/// to a result file.
+/// It will use hashmap to give a count to each url. Then it sort the urls
+/// by the number we just counting. And finnaly we store it into the file.
 ///
 /// *[`Clone`]
 ///
 #[derive(Clone)]
-pub struct ReduceFunction<P: AsRef<Path>> {
-    input_prefix: P,
-    output_prefix: P,
+pub struct ReduceFunction {
+    /// the output of map operator For a prefix we add the the index of thead. We get the director
+    /// that store the url.
+    input_prefix: String,
+    /// We output sorted url int the form of (number of url, url).
+    output_prefix: String,
+    /// the bucket each thead process
     bucket_start: usize,
     bucket_end: usize,
+    /// the number of threads that previous step takes
     pre_thread_num: usize,
 }
 
-impl<P: AsRef<Path>> ReduceFunction<P> {
+impl ReduceFunction {
     pub fn new(
-        input_prefix: P,
-        output_prefix: P,
+        input_prefix: String,
+        output_prefix: String,
         bucket_start: usize,
         bucket_end: usize,
         pre_thread_num: usize,
@@ -43,10 +48,12 @@ impl<P: AsRef<Path>> ReduceFunction<P> {
 
     pub fn reduce(&self) -> std::io::Result<()> {
         for i in self.bucket_start..self.bucket_end {
-            let path_buf = self.output_prefix.as_ref().join(i.to_string().as_str());
+            let mut path_buf = PathBuf::new();
+            path_buf.push(self.output_prefix.as_str());
+            path_buf.push(i.to_string().as_str());
             let outpath = path_buf.as_path();
 
-            match std::fs::create_dir(self.output_prefix.as_ref()) {
+            match std::fs::create_dir(self.output_prefix.as_str()) {
                 Ok(()) => println!("Create reduce out file success"),
                 _ => println!("Reduce File Director Already_Have"),
             };
@@ -54,7 +61,7 @@ impl<P: AsRef<Path>> ReduceFunction<P> {
 
             for j in 0..self.pre_thread_num {
                 let mut strbuf = String::new();
-                strbuf.push_str(self.input_prefix.as_ref().to_str().unwrap());
+                strbuf.push_str(self.input_prefix.as_str());
                 strbuf.push_str(j.to_string().as_str());
                 let prefixbuf = PathBuf::from(strbuf);
 
@@ -94,7 +101,7 @@ mod test {
     use super::*;
     #[test]
     fn test_reduce() -> std::io::Result<()> {
-        let reduce = ReduceFunction::new("tmp", "statistic", 0, 2, 2);
+        let reduce = ReduceFunction::new(String::from("tmp"), String::from("statistic"), 0, 2, 2);
         let _res = reduce.reduce();
         Ok(())
     }

@@ -5,9 +5,18 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
+///
+/// This class is for CompareElement in for binary heap
+/// Every time it is poped from the priority queue. It
+/// will read the next line can give the next big amount.
+///
+///
 struct CompareElement {
+    /// the number of most url in the current file
     current_top_num: u64,
+    /// the url itself
     current_top_url: String,
+    /// read the url of the file each one in a line
     bufreader: BufReader<File>,
 }
 impl PartialEq for CompareElement {
@@ -111,9 +120,9 @@ mod test {
         println!("{:?}", ans);
         assert_eq!(
             vec![
-                (2, String::from("\"urlone\"")),
-                (1, String::from("\"ulrfour\"")),
-                (1, String::from("\"lruthese\""))
+                (3, String::from("\"urlone\"")),
+                (2, String::from("\"urlfive\"")),
+                (1, String::from("\"urlthrea\""))
             ],
             ans
         );

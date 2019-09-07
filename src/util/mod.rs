@@ -2,7 +2,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::SeekFrom;
-use std::path::Path;
 
 pub const BUF_SIZE: usize = 1 << 16;
 ///
@@ -28,12 +27,16 @@ impl FileOffset {
         self.end
     }
 }
-pub fn io_splite<P: AsRef<Path>>(path: P, thread_num: usize) -> std::io::Result<Vec<FileOffset>> {
-    let metadata = std::fs::metadata(path.as_ref())?;
+
+///
+/// Splite the file according to the threads of map operator
+///
+pub fn io_splite(path: String, thread_num: usize) -> std::io::Result<Vec<FileOffset>> {
+    let metadata = std::fs::metadata(path.as_str())?;
     let tlen = metadata.len();
     let elen = tlen / (thread_num as u64);
 
-    let f = match File::open(path) {
+    let f = match File::open(path.as_str()) {
         Ok(file) => file,
         _ => panic!("Error Open Data File"),
     };
@@ -73,20 +76,21 @@ mod test {
     #[test]
     fn test_io_splite_read_all() -> std::io::Result<()> {
         let filepath = String::from("urlfile.txt");
-        let file_offs = io_splite(&filepath, 4)?;
-        let f = File::open(&filepath)?;
+        let file_offs = io_splite(filepath.clone(), 2)?;
+        let f = File::open(filepath)?;
         for (_index, file_off) in file_offs.iter().enumerate() {
             let mut buf = BufReader::new(f.try_clone()?);
             let _res = buf.seek(SeekFrom::Start(file_off.get_start() as u64));
             let sz = file_off.get_end() - file_off.get_start();
             let mut buffer = vec![0; sz as usize];
             buf.read_exact(&mut buffer)?;
+
             if _index == 0 {
-                assert_eq!(b"urlone\r\nurltwo\r\nurlthree\r\n", buffer.as_slice())
+                let ans = String::from("urlone\r\nurltwo\r\nurlthree\r\nurlone\r\nurlone\r\n");
+                assert_eq!(ans, String::from_utf8(buffer.clone()).unwrap());
             } else if _index == 1 {
-                assert_eq!(b"urlone\r\nurlthrea\r\nurlfour\r\n", buffer.as_slice())
-            } else if _index == 2 {
-                assert_eq!(b"ulrfive\r\nlruthese\r\n", buffer.as_slice());
+                let ans = String::from("urlthrea\r\nurlfour\r\nurlfive\r\nurlfive\r\n");
+                assert_eq!(ans, String::from_utf8(buffer.clone()).unwrap());
             }
         }
 
@@ -96,8 +100,8 @@ mod test {
     #[test]
     fn test_io_splite_line() -> std::io::Result<()> {
         let filepath = String::from("urlfile.txt");
-        let file_offs = io_splite(&filepath, 2)?;
-        let f = File::open(&filepath)?;
+        let file_offs = io_splite(filepath.clone(), 2)?;
+        let f = File::open(filepath)?;
         for file_off in file_offs.iter() {
             let mut buf = BufReader::new(f.try_clone()?);
             let _res = buf.seek(SeekFrom::Start(file_off.get_start()));
