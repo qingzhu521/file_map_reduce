@@ -8,22 +8,24 @@ use std::thread;
 use std::time::Instant;
 
 fn main() -> std::io::Result<()> {
-    //let mut args: Vec<String> = std::env::args().collect();
-    //let file = args.pop().unwrap();
-    let file_name = "target\\test.data";
-    let current = Instant::now();
-    let map_thread_num = 4;
-    let reduce_thread_num = 2;
+    let input_file_name = "target\\test.data";
+    let map_out_prefix = "tmp";
+    let reduce_out_dir = "statistic";
+
+    let map_thread_num = 1;
+    let reduce_thread_num = 1;
     let bucket_number = 100;
 
-    let mut splite_res = io_splite(file_name, map_thread_num).unwrap();
+    let current = Instant::now();
+    let mut splite_res = io_splite(input_file_name, map_thread_num).unwrap();
     let mut map_thread_vec = vec![];
 
-    let map_out_prefix = String::from("tmp");
-
     for (index, item) in splite_res.drain(..).enumerate() {
-        let map_out_index = map_out_prefix.clone().add(index.to_string().as_str());
-        let map_func = MapFunction::new(item, file_name, map_out_index, bucket_number);
+        let map_out_dir = map_out_prefix
+            .to_string()
+            .clone()
+            .add(index.to_string().as_str());
+        let map_func = MapFunction::new(item, input_file_name, map_out_dir, bucket_number);
         let handler = thread::spawn(move || -> std::io::Result<()> { map_func.map() });
         map_thread_vec.push(handler);
     }
@@ -48,13 +50,8 @@ fn main() -> std::io::Result<()> {
             interval
         };
         println!("{} {}", start, end);
-        let reduce_func = ReduceFunction::new(
-            "target\\tmp",
-            "target\\statistic",
-            start,
-            end,
-            map_thread_num,
-        );
+        let reduce_func =
+            ReduceFunction::new(map_out_prefix, reduce_out_dir, start, end, map_thread_num);
         let handler = thread::spawn(move || -> std::io::Result<()> { reduce_func.reduce() });
         reduce_thread_vec.push(handler);
     }
@@ -67,7 +64,7 @@ fn main() -> std::io::Result<()> {
         }
     }
 
-    let result = get_top_k("target\\statistic", 2, 100);
+    let result = get_top_k(reduce_out_dir, bucket_number, 100);
     println!("{:?}", result);
 
     println!("{:?}", current.elapsed());

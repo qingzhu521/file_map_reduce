@@ -7,6 +7,7 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Write;
+use std::io::{Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
 ///
@@ -49,8 +50,8 @@ impl<P: AsRef<Path>> MapFunction<P> {
             Ok(file) => file,
             _ => panic!("Error Open Map File"),
         };
-        let bffreader = BufReader::with_capacity(BUF_SIZE, f);
-
+        let mut bffreader = BufReader::with_capacity(BUF_SIZE, f);
+        let _res = bffreader.seek(SeekFrom::Start(self.file_offset.get_start()));
         let mut bffwriter_vec = vec![];
         match std::fs::create_dir(self.output_dir.as_str()) {
             Ok(()) => println!("Create OK"),
@@ -69,7 +70,8 @@ impl<P: AsRef<Path>> MapFunction<P> {
         let mut hasher = DefaultHasher::new();
         for line in bffreader.lines() {
             let mut url: String = line.unwrap();
-            sz -= url.len() as u64;
+            let line_sep = if cfg!(target_os = "windows") { 2 } else { 1 };
+            sz -= (url.len() + line_sep) as u64; // And the \n
             url.hash(&mut hasher);
             let hash_res = hasher.finish();
             let output_index = hash_res % (self.bucket_num as u64);
@@ -86,19 +88,20 @@ impl<P: AsRef<Path>> MapFunction<P> {
 
 #[cfg(test)]
 mod test {
+    use super::super::util::io_splite;
     use super::*;
-
+    use std::iter::Iterator;
     #[test]
     fn test_map() -> std::io::Result<()> {
-        use std::fs::metadata;
-        let meta = metadata("urlfile.txt")?;
-        let len = meta.len();
-
-        let fo = FileOffset::new(0, len);
-
-        let mapper = MapFunction::new(fo, "urlfile.txt", String::from("tmp0"), 2);
-        mapper.map()?;
+        let io_spliter = io_splite("urlfile.txt", 2).unwrap();
+        for (index, fo) in io_spliter.iter().enumerate() {
+            let mut prefix = String::from("tmp");
+            prefix.push_str(index.to_string().as_str());
+            let mapper = MapFunction::new(fo.clone(), "urlfile.txt", prefix, 2);
+            mapper.map()?;
+        }
 
         Ok(())
     }
+
 }

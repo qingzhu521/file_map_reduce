@@ -94,7 +94,7 @@ mod test {
     use super::*;
     #[test]
     fn test_reduce() -> std::io::Result<()> {
-        let reduce = ReduceFunction::new("tmp", "statistic", 0, 2, 1);
+        let reduce = ReduceFunction::new("tmp", "statistic", 0, 2, 2);
         let _res = reduce.reduce();
         Ok(())
     }

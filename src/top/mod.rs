@@ -17,7 +17,7 @@ impl PartialEq for CompareElement {
 }
 impl PartialOrd for CompareElement {
     fn partial_cmp(&self, other: &CompareElement) -> Option<Ordering> {
-        if self.current_top_num < other.current_top_num {
+        if self.current_top_num > other.current_top_num {
             Some(Ordering::Greater)
         } else if self.current_top_num == other.current_top_num {
             Some(Ordering::Equal)
@@ -35,7 +35,6 @@ impl Ord for CompareElement {
 }
 impl CompareElement {
     fn new<P: AsRef<Path>>(file_name: P) -> Self {
-        println!("{:?}", file_name.as_ref());
         let f = match File::open(file_name) {
             Ok(file) => file,
             _ => panic!("Fail at reading statistic File"),
@@ -43,9 +42,15 @@ impl CompareElement {
         let mut bufreader = BufReader::with_capacity(BUF_SIZE, f);
         let mut line = String::new();
         let _res = bufreader.read_line(&mut line);
-        let mut iter = line.split_whitespace();
-        let current_top_num: u64 = iter.next().unwrap().parse().unwrap();
-        let current_top_url: String = iter.next().unwrap().to_string();
+        let (current_top_num, current_top_url): (u64, String) = if !line.is_empty() {
+            let mut iter = line.split_whitespace();
+            (
+                iter.next().unwrap().parse().unwrap(),
+                iter.next().unwrap().to_string(),
+            )
+        } else {
+            (0u64, String::from(""))
+        };
         Self {
             current_top_num,
             current_top_url,
@@ -102,7 +107,15 @@ mod test {
     use super::*;
     #[test]
     fn test_get_top_k() {
-        let ans = get_top_k("statistic", 1, 3);
+        let ans = get_top_k("statistic", 2, 3);
         println!("{:?}", ans);
+        assert_eq!(
+            vec![
+                (2, String::from("\"urlone\"")),
+                (1, String::from("\"ulrfour\"")),
+                (1, String::from("\"lruthese\""))
+            ],
+            ans
+        );
     }
 }
