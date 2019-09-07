@@ -3,22 +3,23 @@
 The project is for finding the most 100 urls in 100GB files which constraint in 1G memory.
 
 Usage:
-  `cargo run --bin main -- <input>  -m <map_out> -r <reduce_out> -f <number of the map threads> -s <number of the reduce threads> -b <number of the buckets>`
-  
- -<input> the path of input url file. 
- -<map_out> a prefix of the file that the map operator can store. 
- -<reduce_out> the director of the file that the reduce operator can store. 
- -<number of the map threads> 
- -<number of the reduce threads>
- -<number of buckets>.
+  `cargo run --bin main -- -i <input>  -m <map_out> -r <reduce_out> -f <number of the map threads> -s <number of the reduce threads> -b <number of buckets>`
+ 
+ ## `Parameters`
+ >* -i "input" the path of input url file. 
+ >* -m "map_out" a prefix of the file that the map operator can store. 
+ >* -r "reduce_out" the director of the file that the reduce operator can store. 
+ >* -f "number of the map threads" 
+ >* -s "number of the reduce threads"
+ >* -b "number of buckets".
 
 
-The whole process can be divided into three part. 
-* Map:    It reads the url file and hash the URL string into a number which is like number % bucket to specify the index of file that the url belongs.
-* Reduce: It reads the bucket file as map giving and store it into a map. Then it sorts each file into a bucket sorted file as output.
-* Topk:   It uses output file of reduce procdure as a input. And use heap iteratively give the top-k elements.
+## How It Works
+1. Map - It reads the url file and hash the URL string into a number which is like number % bucket to specify the index of file that the url belongs.
+2. Reduce - It reads the bucket file as map giving and store it into a map. Then it sorts each file into a bucket sorted file as output.
+3. Topk - It uses output file of reduce procdure as a input. And use heap iteratively give the top-k elements.
 
-
+## Experiments
 This is a table for experiments[https://docs.google.com/spreadsheets/d/1usG3xcs5iF3F0ls63ppfFUILXCpnaqX4CJNTfUTXXnI/edit#gid=0
 ].
 In experiments first we test the best buffer size of reader and writer.
